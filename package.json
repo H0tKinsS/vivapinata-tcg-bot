@@ -1,0 +1,19 @@
+{
+  "name": "dc-vp-bot",
+  "version": "1.0.0",
+  "description": "Discord viva pinata collection card bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "H0tKinsS",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "canvas": "^2.11.2",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.4.4",
+    "sequelize": "^6.36.0",
+    "sqlite3": "^5.1.7"
+  }
+}

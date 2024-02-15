@@ -1,0 +1,28 @@
+{
+    "clientId": "1142194536584597535",
+	"guildId": "312574328439046144",
+    "mysql": {
+        "host": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "blazzers_bot_cards"
+    },
+    "bot": {
+        "draw_collect_time": 25
+    },
+    "cards": {
+        "width": 500,
+        "height": 600,
+        "name_height": 90,
+        "level_height": 15,
+        "default_draw_amount": 3,
+        "max_draw_amount": 10,
+        "others_can_grab": true,
+        "others_can_grab_after": 15,
+        "drop_cooldown": 10,
+        "grab_cooldown": 5
+    },
+    "collection": {
+        "lines_per_page": 10
+    }
+}
