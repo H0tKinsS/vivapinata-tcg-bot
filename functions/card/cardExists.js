@@ -1,8 +1,13 @@
 const {Cards} = require('../../utils/database.js');
 
 module.exports = async (cardId) => {
-  return await Cards.findOne({
+  const card = await Cards.findOne({
     where: {
       card_id: cardId
-    }}).card_owner !== null ? true : false;
+    }})
+  if (!card || !card.card_owner || !card.card_grabber) {
+    return false;
+  } else {
+    return true
+  }
 }

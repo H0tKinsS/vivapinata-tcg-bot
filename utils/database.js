@@ -14,7 +14,7 @@ const Cards = require('../models/cards.js')(sequelize, Sequelize.DataTypes);
 const Pinatas = require('../models/pinatas.js')(sequelize, Sequelize.DataTypes);
 const Items = require('../models/items.js')(sequelize, Sequelize.DataTypes);
 const AllItems = require('../models/allitems.js')(sequelize, Sequelize.DataTypes);
-
+const Gardens = require('../models/gardens.js')(sequelize, Sequelize.DataTypes);
 
 Reflect.defineProperty(Users.prototype, 'removeCard', {
   value: async (userId, sortCriteria, sortOrder) => {
@@ -80,5 +80,6 @@ module.exports = {
   Cards,
   Pinatas,
   Items,
-  AllItems
+  AllItems,
+  Gardens
 }

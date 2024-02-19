@@ -11,6 +11,7 @@ const sequelize = new Sequelize('database', 'username', 'password', {
 require('./models/users.js')(sequelize, Sequelize.DataTypes);
 require('./models/cards.js')(sequelize, Sequelize.DataTypes);
 require('./models/items.js')(sequelize, Sequelize.DataTypes);
+require('./models/gardens.js')(sequelize, Sequelize.DataTypes);
 const Pinatas = require('./models/pinatas.js')(sequelize, Sequelize.DataTypes);
 const AllItems = require('./models/allitems.js')(sequelize, Sequelize.DataTypes);
 
