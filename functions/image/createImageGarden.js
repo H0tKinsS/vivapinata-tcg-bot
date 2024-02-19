@@ -5,6 +5,7 @@ const {Cards} = require('../../utils/database.js')
 const getCardFromName = require('../utils/getCardFromName.js');
 registerFont('./fonts/Funhouse.ttf', { family: 'funhouse' });
 registerFont('./fonts/Cocogoose-Pro-Light-trial.ttf', { family: 'Cocogoose-Pro-Light-trial' });
+registerFont('./fonts/GloriaHallelujah-Regular.ttf', { family: 'GloriaHallelujah-Regular' });
 
 
 module.exports = async (slots) => {

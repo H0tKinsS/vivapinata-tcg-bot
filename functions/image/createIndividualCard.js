@@ -3,13 +3,14 @@ const { registerFont, createCanvas, loadImage } = require('canvas');
 
 registerFont('./fonts/Funhouse.ttf', { family: 'funhouse' });
 registerFont('./fonts/Cocogoose-Pro-Light-trial.ttf', { family: 'Cocogoose-Pro-Light-trial' });
+registerFont('./fonts/AmaticSC-Bold.ttf', { family: 'AmaticSC-Bold' });
 
 
 const applyTextDraw = (canvas, text, maxWidth) => {
   const context = canvas.getContext('2d');
-  let fontSize = 50;
+  let fontSize = 80;
   do {
-    context.font = `bold ${fontSize -= 1}px Cocogoose-Pro-Light-trial`;
+    context.font = `bold ${fontSize -= 1}px AmaticSC-Bold`;
   } while (context.measureText(text).width > maxWidth);
   context.letterSpacing = 0;
   return context.font;
@@ -69,7 +70,7 @@ module.exports = async (card) => {
 
   const level = card.lvl;
   context.shadowBlur = 4;
-  context.font = `bold 35px funhouse`;
+  context.font = `bold 35px AmaticSC-Bold`;
   const lvlWidth = context.measureText(level).width;
   const lvlHeight = context.measureText('M').width;
   const centerXLvl = (config.cards.width - lvlWidth) / 2;

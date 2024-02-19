@@ -13,7 +13,7 @@
     "cards": {
         "width": 500,
         "height": 600,
-        "name_height": 90,
+        "name_height": 74,
         "level_height": 15,
         "default_draw_amount": 3,
         "max_draw_amount": 10,
