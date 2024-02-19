@@ -156,7 +156,7 @@ module.exports = {
 				console.log(garden[slotField])
         slots.push(garden[slotField]);
     	}
-			const imageBuffer = await createImageGarden(slots);
+			const imageBuffer = await createImageGarden(slots, userId);
 			const embed = await require('../functions/embed/getEmbedGarden')(garden);
 			await interaction.reply({
 				embeds: [embed], 

@@ -1,14 +1,14 @@
 const config = require('../../config.json');
 const { registerFont, createCanvas, loadImage } = require('canvas');
 const createIndividualCard = require('./createIndividualCard.js');
-const {Cards} = require('../../utils/database.js')
+const {Cards, Gardens} = require('../../utils/database.js')
 const getCardFromName = require('../utils/getCardFromName.js');
 registerFont('./fonts/Funhouse.ttf', { family: 'funhouse' });
 registerFont('./fonts/Cocogoose-Pro-Light-trial.ttf', { family: 'Cocogoose-Pro-Light-trial' });
 registerFont('./fonts/GloriaHallelujah-Regular.ttf', { family: 'GloriaHallelujah-Regular' });
 
 
-module.exports = async (slots) => {
+module.exports = async (slots, ownerId) => {
   const cardWidthWithSpacing = config.garden.card_width;
   const canvasWidth = (config.garden.cards_per_row * cardWidthWithSpacing);
   const canvasHeight = ((config.garden.card_height) * config.garden.rows) + (20*config.garden.rows) + 20;
@@ -25,6 +25,10 @@ module.exports = async (slots) => {
       if (slots[slot] !== null) {
         const dbcard = dbcards.find(dbcard => dbcard.card_id === slots[slot]);
         if (dbcard) {
+          if (dbcard.card_owner === null || dbcard.card_owner !== ownerId) {
+            await Gardens.findOne({ where: {user_id: ownerId}}).then(garden => garden.update({ [`slot_${slot+1}`]: null})).catch(err => console.log(err));
+            continue;
+          }
           console.log(`Slot ${slot}: ${slots[slot]}`)
           let card = await getCardFromName(dbcard.card_name)
           card.condition = dbcard.card_condition;

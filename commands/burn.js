@@ -63,8 +63,8 @@ module.exports = {
             await message.awaitMessageComponent({ filter: collectorFilter, max: 1, time: 20000 })
             .then(async (i) => {
               if (i.customId == 'yes') {
-                await card.update({ card_owner: null });
-                await user.addItem(interaction.user.id, 'coins', coins);
+                await card.setOwner(null);
+                await user.addItem('coins', coins);
                 const newEmbed = await getEmbedDestroyed(card, coins);
                 await i.update({
                   content: `Zniszczono piniatę za \`${coins}🏵️\``,

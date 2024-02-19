@@ -1,7 +1,7 @@
 const { getItemFromId, getEmojiFromId } = require('../functions/utils/getItemFromId.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, ComponentType, EmbedBuilder  } = require('discord.js');
 const config = require('../config.json');
-const {Users } = require('../utils/database.js');
+const {Users, AllItems} = require('../utils/database.js');
 
 module.exports = {
   cooldown: 5,
@@ -63,14 +63,15 @@ module.exports = {
           user_id: mentionedUserId
         },
       })
-      const userItems = await user.getItems(user.user_id, sortCriteria, sortOrder)
+      const userItems = await user.getItems(sortCriteria, sortOrder)
 
       userItems.map((row) => row.dataValues);
       
       userCollection = [];
       for (const row of userItems) {
         if (row.item_id.includes(interaction.options.getString('wyszukaj') || "")) {
-          userCollection.push(`${await getEmojiFromId(row.item_id)} \*\*${row.item_amount}\*\* · \`${row.item_id}\` · ${await getItemFromId(row.item_id)}`);
+          const item = await AllItems.findOne({where: {item_id: row.item_id}})
+          userCollection.push(`${item.item_emoji} \*\*${row.item_amount}\*\* · \`${row.item_id}\` · ${item.item_name}`);
         }
       }
         const pageSize = config.collection.lines_per_page;

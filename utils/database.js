@@ -17,23 +17,25 @@ const AllItems = require('../models/allitems.js')(sequelize, Sequelize.DataTypes
 const Gardens = require('../models/gardens.js')(sequelize, Sequelize.DataTypes);
 
 Reflect.defineProperty(Users.prototype, 'removeCard', {
-  value: async (userId, sortCriteria, sortOrder) => {
-    return await Cards.findOne({ where: { card_owner: userId }, order: [[sortCriteria, sortOrder]] }).then(card => card.update({ card_owner: null}))
+  value: async function() {
+    return await Cards.findOne({ where: { card_owner: this.user_id }}).then(card => card.update({ card_owner: null}))
   },
 });
 Reflect.defineProperty(Users.prototype, 'getCards', {
-  value: async (userId, sortCriteria, sortOrder) => {
-    return await Cards.findAll({ where: { card_owner: userId }, order: [[sortCriteria, sortOrder]] })
+  value: async function(sortCriteria, sortOrder) {
+    const userId = this.user_id; // Assuming user_id is a property of Users instances
+    return await Cards.findAll({ where: { card_owner: userId }, order: [[sortCriteria, sortOrder]] });
   },
 });
 Reflect.defineProperty(Users.prototype, 'getItems', {
-  value: async (userId, sortCriteria, sortOrder) => {
-    return await Items.findAll({ where: { user_id: userId }, order: [[sortCriteria, sortOrder]] })
+  value: async function(sortCriteria, sortOrder) {
+    return await Items.findAll({ where: { user_id: this.user_id }, order: [[sortCriteria, sortOrder]] })
   },
 });
 
 Reflect.defineProperty(Users.prototype, 'addCard', {
-  value: async (serverId, userId, card) => {
+  value: async function(serverId, card) {
+    const userId = this.user_id;
     const dbCard = await Cards.findOne({ where: { card_id: card.identifier } });
 
     if (dbCard) {
@@ -61,17 +63,43 @@ Reflect.defineProperty(Users.prototype, 'addCard', {
 });
 
 Reflect.defineProperty(Users.prototype, 'addItem', {
-	value: async (userId, item, amount) => {
+	value: async function(item, amount) {
 		const userItem = await Items.findOne({
-			where: { user_id: userId, item_id: item },
+			where: { user_id: this.user_id, item_id: item },
 		});
 		if (userItem) {
 			userItem.item_amount += amount;
 			return userItem.save();
 		}
 
-		return Items.create({ user_id: userId, item_id: item, item_amount: amount });
+		return Items.create({ user_id: this.user_id, item_id: item, item_amount: amount });
 	},
+});
+
+Reflect.defineProperty(Cards.prototype, 'getOwner', {
+  value: async function() {
+    console.log(this.card_owner)
+    return this.card_owner ?? null;
+  },
+});
+
+Reflect.defineProperty(Cards.prototype, 'setOwner', {
+  value: async function(userId) {
+    console.log(this.card_owner)
+    return await this.update({ card_owner: userId});
+  },
+});
+
+Reflect.defineProperty(Cards.prototype, 'setOwner', {
+  value: async function(userId) {
+    console.log(this.card_owner)
+    return await this.update({ card_owner: userId});
+  },
+});
+Reflect.defineProperty(Cards.prototype, 'burn', {
+  value: async function() {
+    return await this.update({ card_owner: null});
+  },
 });
 
 module.exports = {

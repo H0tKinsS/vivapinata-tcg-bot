@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const path = require('path');
+const {Cards} = require('../utils/database.js');
 
 module.exports = {
     cooldown: 5,
@@ -16,14 +17,16 @@ module.exports = {
             return await interaction.reply({content: `Nie znaleziono piniaty`, ephemeral: true});
         }
 
-        if (!await require('../functions/card/cardExists')(cardId)) {
+        const card = await Cards.findOne({where: {card_id: cardId}})
+        if (!card) {
             return;
         }
-        if (await require('../functions/card/getCardOwner')(cardId) !== interaction.user.id) {
-            return;
+        if (await card.getOwner() !== interaction.user.id) {
+            return await interaction.reply({content: `Nie znaleziono piniaty`, ephemeral: true});
         }
-        const card = await require('../functions/utils/getCardFromId')(cardId);
-        const image = await require('../functions/image/createImage')(await require('../functions/utils/getCardFromName')(card.card_name));
+        const tempcard = await require('../functions/utils/getCardFromName')(card.card_name);
+        tempcard.condition = card.card_condition;
+        const image = await require('../functions/image/createImage')(tempcard);
         
         const embed = await require('../functions/embed/getEmbedGive')(card);
 
@@ -44,16 +47,18 @@ module.exports = {
         const collector = msg.createMessageComponentCollector({time: 30000, filter: i => i.user.id === interaction.options.getUser('gracz').id || i.user.id === interaction.user.id})
         
         collector.on('collect', async i => {
-            if (i.user.id !== interaction.options.getUser('gracz').id) return;
-            if (await require('../functions/card/getCardOwner')(cardId) !== interaction.user.id) {
-                return;
-            }
+            
+            //Accept receiver
             if (i.customId === card.card_id) {
                 if (i.user.id !== interaction.options.getUser('gracz').id) return;
-                await require('../functions/card/changeOwner')(cardId, interaction.user.id, interaction.options.getUser('gracz').id);
+                // await require('../functions/card/changeOwner')(cardId, interaction.user.id, interaction.options.getUser('gracz').id);
+                await card.setOwner(interaction.options.getUser('gracz').id);
                 const newEmbed = await require('../functions/embed/getEmbedGiveSuccess')(card);
                 await i.update({embeds: [newEmbed], components: []});
-            } else if (i.customId === 'confirm'){
+            } 
+            // Confirm owner
+            else if (i.customId === 'confirm'){
+                if (await card.getOwner() !== interaction.user.id) return;
                 if (i.user.id !== interaction.user.id) return;
                 const newRow = new ActionRowBuilder().addComponents(accept);
                 await i.update({embeds: [embed], components: [newRow]});

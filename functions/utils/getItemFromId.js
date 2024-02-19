@@ -17,12 +17,9 @@ async function getItemFromId(id) {
 async function getEmojiFromId(id) {
 	try {
 		const item = await AllItems.findOne({where: {item_id: id}});
-	  
 		if (item) {
 	  	return item.item_emoji;
-		} else {
-		throw new Error(`Card not found: ${name}`);
-	  }
+		}
 	} catch (error) {
 	  throw new Error(`Error while retrieving card: ${error.message}`);
 	}

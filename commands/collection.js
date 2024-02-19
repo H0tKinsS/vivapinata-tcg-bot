@@ -71,7 +71,7 @@ module.exports = {
           user_id: mentionedUserId
         },
       })
-      const userCards = await user.getCards(user.user_id, sortCriteria, sortOrder)
+      const userCards = await user.getCards(sortCriteria, sortOrder)
 
       userCards.map((row) => row.dataValues);
       
