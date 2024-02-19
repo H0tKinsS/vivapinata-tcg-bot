@@ -22,29 +22,31 @@ module.exports = async (card) => {
   const frameImage = await loadImage(`${__dirname}/../../img/frames/${card.frame}`);
   const oldPaperTexture = await loadImage(`${__dirname}/../../img/old-paper-texture.png`);
   var newWidth = backgroundImage.width - 80; // Subtract 80 pixels in total (40 from each side)
-  context.drawImage(backgroundImage, 40, 0, backgroundImage.width - 80, backgroundImage.height, 40, 0, newWidth, backgroundImage.height);  let opacity = 0;
-  if (card.condition) {
-    switch(card.condition) {
-      case 0:
-        opacity = 0.7;
-        break;
-      case 1:
-        opacity = 0.5;
-        break;
-      case 2:
-        opacity = 0.4;
-        break;
-      case 3:
-        opacity = 0.25;
-        break;
-      case 4:
-        opacity = 0;
-        break;
-      default:
-        opacity = 0.5;
-        break;
-    }
+  let condition = card.condition !== undefined ? card.condition.toString() : "4";
+  context.drawImage(backgroundImage, 40, 0, backgroundImage.width - 80, backgroundImage.height, 40, 0, newWidth, backgroundImage.height);
+  let opacity = 0;
+  console.log(condition)
+  switch(condition) {
+    case "0":
+      opacity = 0.7;
+      break;
+    case "1":
+      opacity = 0.5;
+      break;
+    case "2":
+      opacity = 0.4;
+      break;
+    case "3":
+      opacity = 0.25;
+      break;
+    case "4":
+      opacity = 0;
+      break;
+    default:
+      opacity = 0.5;
+      break;
   }
+  console.log(opacity)
   context.globalAlpha = opacity;
   context.drawImage(oldPaperTexture, 0, 0, config.cards.width, config.cards.height);
   context.globalAlpha = 1;

@@ -119,7 +119,9 @@ module.exports = {
 						}))),
 	async execute(interaction) {
 		try {
-			const [garden, created] = await Gardens.findOrCreate({where: {user_id: interaction.user.id}})
+			const userOption = interaction.options.getUser('użytkownik');
+			const userId = userOption ? userOption.id : interaction.user.id;
+			const [garden, created] = await Gardens.findOrCreate({where: {user_id: userId}})
 			
 		if (interaction.options.getSubcommand() === 'edit') {
 			const slot = interaction.options.getString('slot');
@@ -128,20 +130,15 @@ module.exports = {
 				where: {
 					card_id: cardId
 			}})
-			if (!card) {
+			if (!card || card.card_owner !== interaction.user.id) {
 				return await interaction.reply({content: `Nie znaleziono piniaty`, ephemeral: true});
 			}
-			if (card.card_owner !== interaction.user.id) {
-        return await interaction.reply({content: `Nie posiadasz tej piniaty`, ephemeral: true});
-      }
 			const slots = [];
 			for (let i = 1; i <= 10; i++) {
         const slotField = `slot_${i}`;
 				console.log(garden[slotField])
         slots.push(garden[slotField]);
     	}
-			const updatePromises = [];
-
 			for (const slot of slots) {
 					if (slot === cardId) {
 							console.log(`Duplicate found`);
@@ -151,7 +148,7 @@ module.exports = {
 			}
 			// Now, outside of the loop, update the garden with the new cardId
 			await garden.update({ [slot]: cardId });
-			
+			return await interaction.reply({content: `Pomyślnie ustawiono piniatę \`${cardId}\``, ephemeral: true});
 		} else if (interaction.options.getSubcommand() === 'view') {
 			const slots = [];
 			for (let i = 1; i <= 10; i++) {
