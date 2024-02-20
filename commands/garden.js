@@ -1,15 +1,24 @@
 const getCardFromName = require('../functions/utils/getCardFromName.js');
+const getItemFromId = require('../functions/utils/getItemFromId.js');
 const createImageGarden = require('../functions/image/createImageGarden.js');
 const {SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const {Gardens, Cards} = require('../utils/database.js');
+const {AllItems, Cards} = require('../utils/database.js');
 const getEmbedView = require('../functions/embed/getEmbedView.js');
 const getEmbedViewInfo = require('../functions/embed/getEmbedViewInfo.js');
-const cardExists = require('../functions/card/cardExists.js');
+const getUser = require('../functions/user/getUser.js');
 module.exports = {
     cooldown: 5,
 	data: new SlashCommandBuilder()
 		.setName('garden')
 		.setDescription('Ogród piniat')
+		.addSubcommand(subcommand =>
+			subcommand
+        .setName('background')
+        .setDescription('Edytuj tło ogrodu (puste, aby usunąć)')
+        .addStringOption(option =>
+          option.setName('tło')
+            .setDescription('Podaj tło')
+            .setRequired(false)))
 		.addSubcommand(subcommand =>
 			subcommand
         .setName('view')
@@ -121,7 +130,8 @@ module.exports = {
 		try {
 			const userOption = interaction.options.getUser('użytkownik');
 			const userId = userOption ? userOption.id : interaction.user.id;
-			const [garden, created] = await Gardens.findOrCreate({where: {user_id: userId}})
+			const user = await getUser(userId);
+			const garden = await user.getGarden();
 			
 		if (interaction.options.getSubcommand() === 'edit') {
 			const slot = interaction.options.getString('slot');
@@ -136,7 +146,6 @@ module.exports = {
 			const slots = [];
 			for (let i = 1; i <= 10; i++) {
         const slotField = `slot_${i}`;
-				console.log(garden[slotField])
         slots.push(garden[slotField]);
     	}
 			for (const slot of slots) {
@@ -150,13 +159,8 @@ module.exports = {
 			await garden.update({ [slot]: cardId });
 			return await interaction.reply({content: `Pomyślnie ustawiono piniatę \`${cardId}\``, ephemeral: true});
 		} else if (interaction.options.getSubcommand() === 'view') {
-			const slots = [];
-			for (let i = 1; i <= 10; i++) {
-        const slotField = `slot_${i}`;
-				console.log(garden[slotField])
-        slots.push(garden[slotField]);
-    	}
-			const imageBuffer = await createImageGarden(slots, userId);
+			const cards = await garden.getCards();
+			const imageBuffer = await createImageGarden(cards, userId, await garden.getBackgroundId());
 			const embed = await require('../functions/embed/getEmbedGarden')(garden);
 			await interaction.reply({
 				embeds: [embed], 
@@ -169,6 +173,36 @@ module.exports = {
 			const slot = interaction.options.getString('slot');
 			await garden.update({[slot]: null})
 			return await interaction.reply(`Pomyslnie usunieto kartę z danego slotu`)
+		} else if (interaction.options.getSubcommand() === 'background') {
+			const background = interaction.options.getString('tło');
+			const oldBackground = garden.background;
+			if (!background) {
+				if (oldBackground) {
+					await user.addItem(oldBackground, 1);
+				}
+				await garden.update({background: null});
+        return await interaction.reply(`Pomyslnie usunieto tło ogrodu`);
+			}
+			if (!user.hasItem(background)) {
+				await garden.update({background});
+				return await interaction.reply(`Nie posiadasz danego tła!`);
+			}
+			const item = await AllItems.findOne({where: {item_id: background}})
+			if (!item || !item.item_category === 'garden_background') {
+				return await interaction.reply(`Musisz podać prawidłowe tło!`);
+			}
+			if (oldBackground === background) {
+				return await interaction.reply(`Posiadasz już to tło!`);
+			}
+			const removed = await user.removeItem(background, 1);
+			if (!removed) {
+        return await interaction.reply(`Nie udało się ustawić tła!`);
+      }
+			if (oldBackground) {
+				await user.addItem(oldBackground, 1)
+			}
+			await garden.update({background});
+			return await interaction.reply(`Pomyślnie ustawiono tło \`${background}\``);
 		}
 	  }  catch (error) {
       console.log(error);

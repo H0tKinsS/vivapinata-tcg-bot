@@ -2,7 +2,7 @@ const conditionToStars = require('../functions/utils/conditionToStars.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, ComponentType, EmbedBuilder  } = require('discord.js');
 const cards = require('../pinatas');
 const config = require('../config.json');
-const { Cards, Users } = require('../utils/database.js');
+const getUser = require('../functions/user/getUser.js');
 module.exports = {
   cooldown: 5,
   data: new SlashCommandBuilder()
@@ -66,11 +66,7 @@ module.exports = {
       //   },
       //   order: [[sortCriteria, sortOrder]]
       // });
-      const [user, created] = await Users.findOrCreate({
-        where: {
-          user_id: mentionedUserId
-        },
-      })
+      const user = await getUser(mentionedUserId)
       const userCards = await user.getCards(sortCriteria, sortOrder)
 
       userCards.map((row) => row.dataValues);

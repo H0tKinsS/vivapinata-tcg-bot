@@ -45,6 +45,10 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.TEXT,
 			allowNull: true
 		},
+		background: {
+			type: DataTypes.TEXT,
+			allowNull: true
+		},
 	}, {
 		timestamps: false,
 	});

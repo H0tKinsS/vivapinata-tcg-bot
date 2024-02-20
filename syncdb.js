@@ -35,7 +35,8 @@ sequelize.sync({ force }).then(async () => {
 			  item_id: item.id,
         item_description: item.description,
         item_name: item.name,
-        item_emoji: item.emoji
+        item_emoji: item.emoji,
+        item_category: item.category
 		})
 	})
 	await Promise.all(itemPromises);

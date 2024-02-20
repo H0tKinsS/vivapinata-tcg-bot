@@ -1,6 +1,6 @@
 const config = require('../config.json');
 const Sequelize = require("sequelize");
-
+const Op = Sequelize.Op;
 const sequelize = new Sequelize('database', 'user', 'password', {
   dialect: 'sqlite',
   host: 'localhost',
@@ -15,6 +15,37 @@ const Pinatas = require('../models/pinatas.js')(sequelize, Sequelize.DataTypes);
 const Items = require('../models/items.js')(sequelize, Sequelize.DataTypes);
 const AllItems = require('../models/allitems.js')(sequelize, Sequelize.DataTypes);
 const Gardens = require('../models/gardens.js')(sequelize, Sequelize.DataTypes);
+Reflect.defineProperty(Gardens.prototype, 'getBackgroundId', {
+  value: async function() {
+    return await this.background;
+  }
+});
+Reflect.defineProperty(Gardens.prototype, 'getCards', {
+  value: async function() {
+    const slots = new Map();
+    const cards = new Map();
+    for (let i = 1; i <= config.garden.rows * config.garden.cards_per_row; i++) {
+      const slot = `slot_${i}`;
+      slots.set(i, this[slot]);
+    }
+    const cardIds = Array.from(slots.values()).filter(slot => slot !== null);
+
+    const dbcards = await Cards.findAll({ where: { card_id: {[Op.in]: cardIds}, card_owner: this.user_id}});
+    dbcards.forEach(card => {
+      slots.forEach((cardId, slot) => { // Corrected parameter order
+        if (cardId === card.card_id) {
+          if (card.card_owner !== this.user_id) {
+            this.update({ [`slot_${slot}`]: null});
+          } else {
+            cards.set(slot, card);
+          }
+        }
+      });
+    });
+    console.log(JSON.stringify(cards));
+    return cards;
+  },
+});
 
 Reflect.defineProperty(Users.prototype, 'removeCard', {
   value: async function() {
@@ -25,6 +56,23 @@ Reflect.defineProperty(Users.prototype, 'getCards', {
   value: async function(sortCriteria, sortOrder) {
     const userId = this.user_id; // Assuming user_id is a property of Users instances
     return await Cards.findAll({ where: { card_owner: userId }, order: [[sortCriteria, sortOrder]] });
+  },
+});
+Reflect.defineProperty(Users.prototype, 'getGarden', {
+  value: async function() {
+    const userId = this.user_id; // Assuming user_id is a property of Users instances
+    const [garden, created] = await Gardens.findOrCreate({ where: { user_id: userId }});
+    return garden;
+  },
+});
+Reflect.defineProperty(Users.prototype, 'hasItem', {
+  value: async function(item) {
+    return await Items.findOne({ where: { user_id: this.user_id, item_id: item }}) !== null;
+  },
+});
+Reflect.defineProperty(Users.prototype, 'getItem', {
+  value: async function(item) {
+    return await Items.findOne({ where: { user_id: this.user_id, item_id: item }});
   },
 });
 Reflect.defineProperty(Users.prototype, 'getItems', {

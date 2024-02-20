@@ -7,6 +7,6 @@ module.exports = async (garden) => {
   return new EmbedBuilder()
   .setColor(0x0099FF)
   .setTitle('Wyświetlanie ogrodu')
-  .setDescription(`Właściciel: <@${garden.user_id}>`)
+  .setDescription(`Tło: \`${garden.background || 'brak'}\`\nWłaściciel: <@${garden.user_id}>`)
   .setImage('attachment://image.png')
 }

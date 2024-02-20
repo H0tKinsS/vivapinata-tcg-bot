@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.TEXT,
       allowNull: false
 		},
+		item_category: {
+			type: DataTypes.TEXT,
+      allowNull: false
+		}
 	}, {
 		timestamps: false,
 	});
