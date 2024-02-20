@@ -1,4 +1,4 @@
-
+const config = require('../config.json');
 const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize('database', 'user', 'password', {
@@ -31,6 +31,28 @@ Reflect.defineProperty(Users.prototype, 'getItems', {
   value: async function(sortCriteria, sortOrder) {
     return await Items.findAll({ where: { user_id: this.user_id }, order: [[sortCriteria, sortOrder]] })
   },
+});
+Reflect.defineProperty(Users.prototype, 'canDrop', {
+  value: async function() {
+    if (this.user_last_drop === null || this.user_id === '303932338436440066') {
+      return true; 
+    }
+    const lastDrop = new Date(this.user_last_drop);
+    const now = new Date();
+    const diff = now - lastDrop;
+    return (diff > 1000 * 60 * config.cards.drop_cooldown)
+  },
+});
+Reflect.defineProperty(Users.prototype, 'canGrab', {
+  value: async function() {
+    if (this.user_last_grab === null || this.user_id === '303932338436440066') {
+      return true; 
+    }
+    const lastGrab = new Date(this.user_last_grab);
+    const now = new Date();
+    const diff = now - lastGrab;
+    return (diff > 1000 * 60 * config.cards.grab_cooldown)
+  }
 });
 
 Reflect.defineProperty(Users.prototype, 'addCard', {
@@ -75,25 +97,55 @@ Reflect.defineProperty(Users.prototype, 'addItem', {
 		return Items.create({ user_id: this.user_id, item_id: item, item_amount: amount });
 	},
 });
-
+Reflect.defineProperty(Users.prototype, 'removeItem', {
+	value: async function(item, amount) {
+    try {
+      const userItem = await Items.findOne({
+        where: { user_id: this.user_id, item_id: item },
+      });
+      if (userItem) {
+        if (userItem.item_amount >= amount) {
+          userItem.item_amount -= amount;
+        }
+        await userItem.save();
+        return true
+      }
+      return false;
+    } catch (err) {
+      console.log(err);
+      return false
+    }
+	},
+});
+Reflect.defineProperty(Cards.prototype, 'setOwner', {
+  value: async function(userId) {
+    return await this.update({ card_owner: userId});
+  },
+});
+Reflect.defineProperty(Cards.prototype, 'setGrabber', {
+  value: async function(userId) {
+    return await this.update({ card_grabber: userId});
+  },
+});
+Reflect.defineProperty(Cards.prototype, 'setDropper', {
+  value: async function(userId) {
+    return await this.update({ card_dropper: userId});
+  },
+});
 Reflect.defineProperty(Cards.prototype, 'getOwner', {
   value: async function() {
-    console.log(this.card_owner)
     return this.card_owner ?? null;
   },
 });
 
-Reflect.defineProperty(Cards.prototype, 'setOwner', {
-  value: async function(userId) {
-    console.log(this.card_owner)
-    return await this.update({ card_owner: userId});
+Reflect.defineProperty(Cards.prototype, 'getGrabber', {
+  value: async function() {
+    return await this.card_dropper;
   },
 });
-
-Reflect.defineProperty(Cards.prototype, 'setOwner', {
-  value: async function(userId) {
-    console.log(this.card_owner)
-    return await this.update({ card_owner: userId});
+Reflect.defineProperty(Cards.prototype, 'getDropper', {
+  value: async function() {
+    return await this.card_grabber;
   },
 });
 Reflect.defineProperty(Cards.prototype, 'burn', {

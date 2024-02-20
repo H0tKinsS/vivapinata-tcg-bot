@@ -11,8 +11,7 @@ const getCardFromName = require('../functions/utils/getCardFromName.js');
 const getCardFromId = require('../functions/utils/getCardFromId.js');
 const getRandomCondition = require('../functions/utils/getRandomCondition.js');
 const getUniqueId = require('../functions/utils/getUniqueId.js');
-const canGrab = require('../functions/user/canGrab.js');
-const canDrop = require('../functions/user/canDrop.js');
+const getUser = require('../functions/user/getUser.js');
 const setDropCooldown = require('../functions/user/setDropCooldown.js');
 module.exports = {
   cooldown: 5,
@@ -20,13 +19,13 @@ module.exports = {
 		.setName('draw')
 		.setDescription('Wylosuj piniatę'),
 	async execute(interaction) {
-		if (!await canDrop(interaction.user.id)) {
+		const dropper = await getUser(interaction.user.id);
+		if (!dropper.canDrop()) {
 			return await interaction.reply({ content: 'Nie możesz jeszcze wylosować piniaty!', ephemeral: true });
 		}
 		await setDropCooldown(interaction.user.id)
 		const currentDate = new Date();
 		const now = Date.now();
-		const dropper = interaction.user.id;
 		let randomCards = [];
 		let row = new ActionRowBuilder();
 		const cardsToGrab = new Collection();
@@ -35,7 +34,7 @@ module.exports = {
 			const {count, rows} = await Cards.findAndCountAll({where: {card_name: randomCards[i].name}});
 			randomCards[i].number = count+1;
 			randomCards[i].currentDate = currentDate.toISOString();
-			randomCards[i].dropper = dropper;
+			randomCards[i].dropper = dropper.user_id;
 			randomCards[i].condition = await getRandomCondition();
 			randomCards[i].identifier = await getUniqueId();
 			const createdCard = await createCard(interaction, randomCards[i])
@@ -49,7 +48,7 @@ module.exports = {
 			}
 		}
 		const imageBuffer = await createImageDraw(randomCards);
-		const messageContent = `<@${dropper}> losuje karty`;
+		const messageContent = `<@${dropper.user_id}> losuje karty`;
 		await interaction.deferReply();
 		const response = await interaction.editReply({
 			content: messageContent,
@@ -64,15 +63,15 @@ module.exports = {
 		}
 		const collector = response.createMessageComponentCollector({time: 60_000 });
 		collector.on('collect', async i => {
-			const grabber = i.user.id;
-			const can_grab = await canGrab(grabber);
+			const grabber = await getUser(i.user.id);
+			const can_grab = await grabber.canGrab();
 			if (cardsToGrab.get(i.customId) === false) {
 				return;
 			}
-			if (!others_can_grab && grabber !== dropper) {
+			if (!others_can_grab && grabber.user_id !== dropper.user_id) {
 				if (config.cards.others_can_grab) {
 					return await i.reply({
-						content: `<@${grabber}> nie możesz zebrać piniaty przed dropiącym!`,
+						content: `<@${grabber.user_id}> nie możesz zebrać piniaty przed dropiącym!`,
 						ephemeral: true
 					});
 				} else {
@@ -81,18 +80,18 @@ module.exports = {
 			}
 			if (!can_grab) {
 				return await i.reply({
-					content: `<@${grabber}> nie możesz jeszcze zebrać piniaty!`,
+					content: `<@${grabber.user_id}> nie możesz jeszcze zebrać piniaty!`,
 					ephemeral: true
 				});
 			}
-			if (dropper === grabber) {
+			if (dropper.user_id === dropper.user_id) {
 				if (config.cards.others_can_grab) others_can_grab = true;
 			}
 			cardsToGrab.set(i.customId, false);
 			const card = await getCardFromId(i.customId)
 			try {
-				await setFirstOwner(grabber, card);
-				await i.reply(`<@${grabber}> wybrał/a piniate **${card.card_name}** \`${card.card_id}\` · \`${await conditionToStars(card.card_condition)}\`!`);;
+				await setFirstOwner(grabber.user_id, card);
+				await i.reply(`<@${grabber.user_id}> wybrał/a piniate **${card.card_name}** \`${card.card_id}\` · \`${await conditionToStars(card.card_condition)}\`!`);;
 			} catch (err) {
 				console.log(err);
 			}
